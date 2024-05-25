@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uncategorized Destinations</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/datatables.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/poncho.css') }}">
+</head>
+<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/feather.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/datatables.min.js') }}"></script>
+<script>
+    $(function() {	
+		feather.replace()
+	});
+
+    function openInNewTab(url) {
+        window.open(url, '_blank').focus();
+    }
+
+    $(document).ready( function makeDataTable() {
+		$('#host-table thead #host-table-filter th').each( function () {
+        var title = $('#host-table thead #host-table-header th').eq( $(this).index() ).text();
+		if (/^(View|Action)$/.test(title)) {
+			$(this).html('&nbsp;');
+		} else {
+			$(this).html('<input type="text" placeholder="Filter '+title+'" />');
+		}
+    	} );
+
+		$("input[placeholder]").each(function () {
+        	$(this).attr('size', $(this).attr('placeholder').length);
+    	});
+		
+		$("#host-table").DataTable({
+			"columnDefs": [
+				{
+            		target: 4,
+            		orderable: false
+        		},
+                { responsivePriority: 1, targets: -1 },
+        		{ responsivePriority: 2, targets: -2 },
+                { responsivePriority: 3, targets: -7 },
+    		],
+			layout: {
+        		bottomStart: {
+            		buttons: ['colvis']
+        		}
+    		},
+			"paging": true,
+			"responsive": true,
+			"stateSave": true,
+			"lengthMenu": [ [15, 30, 45, 60, -1], [15, 30, 45, 60, "All"] ],
+			"stateLoadParams": function(settings, data) {
+  				for (i = 0; i < data.columns["length"]; i++) {
+    				var col_search_val = data.columns[i].search.search;
+    				if (col_search_val != "") {
+      					$("input", $("#host-table thead #host-table-filter th")[i]).val(col_search_val);
+    				}
+  				}
+			}
+		});
+
+		var table = $("#host-table").DataTable();
+
+		$("#host-table thead #host-table-filter input").on( 'keyup change', function () {
+        table
+            .column( $(this).parent().parent().index()+':visible' )
+            .search( this.value )
+            .draw();
+    	} );
+
+        $('.buttons-colvis').each(function() {
+            $(this).addClass('btn-sm');
+        });
+
+	}
+    );
+
+    $(document).ready(function () {
+    	$('#signout').click(function () {
+			var table = $('#host-table').DataTable();
+			table.state.clear();
+    	});
+    });
+     
+</script>
+<body>
+    <div class="card mx-auto mt-5 mb-5" style="max-width: 70%;">
+    
+    <div class="card-header bg-light">
+     <div class="row align-items-center">
+        <div class="col">
+          <img src="{{url_for('static', filename='img/poncho.png')}}" style="max-width: 50%;">
+        </div>
+
+    <div class="col-5 text-center">
+    <span class="fs-5">Uncategorized Destinations</span>
+    </div>
+    <div class="col text-end">
+    <a id="signout" class="btn btn-sm btn-primary" role="button" href="{{ url_for('logout') }}">Sign Out</a>
+    </div>
+        </div>
+        </div>
+    <div class="card-body">
+        {% if session.logged_in %}
+            <p></p>
+            <table id="host-table" class="table table-hover">
+                <thead>
+                    <tr id="host-table-filter">
+                        <th data-dt-order="disable">Hostname</th>
+                        <th data-dt-order="disable">First Seen</th>
+                        <th data-dt-order="disable">Last Seen</th>
+                        <th data-dt-order="disable">Seen Count</th>
+                        <th data-dt-order="disable">AI Analysis</th>
+                        <th data-dt-order="disable">Allowed/Blocked</th>
+                        <th data-dt-order="disable">Action</th>
+                    </tr>
+                    <tr id="host-table-header">
+                        <th>Hostname</th>
+                        <th>First Seen</th>
+                        <th>Last Seen</th>
+                        <th>Seen Count</th>
+                        <th>AI Analysis</th>
+                        <th>Allowed/Blocked</th>
+                        <th data-dt-order="disable">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for host in hosts %}
+                        <tr>
+                            <td><a href=# onclick="openInNewTab('https://{{ host['hostname'] }}');">{{ host['hostname'] }}</a></td>
+                            <td>{{ host['createdOn'] | unixtimeDatetime}}</td>
+                            <td>{{ host['lastSeen'] | unixtimeDatetime }}</td>
+                             <td>{{ host['seenCount'] }}</td>
+                            <td>{{ host['aiResult'] if host['aiResult'] else "AI Disabled"  }}</td>
+                            {% if host['umbrellaAction'] %}
+                            <td>Blocked</td>
+                            <td><a class="epg-tableicons-red" href="{{ url_for('updateumbrella', host_id=host['id']) }}"><span data-feather="umbrella">Remove Block</span></a></td>
+                            {% else %}
+                            <td>Allowed</td>
+                            <td><a class="epg-tableicons-green" href="{{ url_for('updateumbrella', host_id=host['id']) }}"><span data-feather="umbrella">Add Block</span></a></td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Please <a href="{{ url_for('login') }}">login</a> to view host data.</p>
+        {% endif %}
+        </div>
+        <div class="card-footer bg-light">
+        <div class="row"><div class="text-center">Poncho Version 0.9.0</div></div>
+                <div class="row"><div class="text-center">Copyright &copy; 2024 Cisco Systems, Inc. and/or its affiliates.</div></div>
+		</div>
+    </div>
+</body>
+</html>
+
