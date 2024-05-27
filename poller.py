@@ -58,17 +58,25 @@ def getUmbrellaToken():
 def getUmbrellaReportingData(accessToken):
     domains = set() 
     url = 'https://api.umbrella.com/reports/v2/activity/dns'
-    params = {'limit':5000, 'to': 'now', 'from': config['umbrella']['reportingLookback']}
+    fromString = f"-{config['umbrella']['reportingLookback']}minutes"
+    params = {'limit':5000, 'to': 'now', 'from': fromString}
     headers = {'Authorization': 'Bearer ' + accessToken}
     response = requests.get(url,params=params, headers=headers)
-    for item in response.json()['data']:
-        # Check if 'categories' key is empty
-        if not item.get('categories'):
-            # Only add domain to list if it had a DNS entry returned and is a IPv4 lookup and its vertict was allowed
-            if (item.get('returncode') == 0 and (item.get('querytype') == 'A') and (item.get('verdict') == 'allowed')):
-                domains.add(item['domain'])
-    debug(domains)
-    return(domains)
+    try:
+        for item in response.json()['data']:
+            # Check if 'categories' key is empty
+            if not item.get('categories'):
+                # Only add domain to list if it had a DNS entry returned and is a IPv4 lookup and its vertict was allowed
+                if (item.get('returncode') == 0 and (item.get('querytype') == 'A') and (item.get('verdict') == 'allowed')):
+                    domains.add(item['domain'])
+        if not domains:
+            debug("No Uncategorized Domains Found")
+        else:
+            debug(domains)
+    except Exception as e:
+        debug("Umbrellay Query Empty")
+    finally:
+        return(domains)
     
 def newDatabaseCheck(dbConnection):
     dbCursor = dbConnection.cursor()

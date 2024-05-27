@@ -21,15 +21,21 @@ limitations under the License.
 @author	Nick Ciesinski (nciesins@cisco.com)
 """
 
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
+import os
 import requests
 import sqlite3
 import hashlib
 import yaml
 import json
 import bcrypt
+import schedule
+import time
+import subprocess
+import threading
+import sys
 from requests.auth import HTTPBasicAuth
-from datetime import date,datetime
+from datetime import date,datetime,timedelta,timezone
 
 with open('config.yaml', 'r') as f:
     config = yaml.safe_load(f)
@@ -37,10 +43,33 @@ with open('config.yaml', 'r') as f:
 app = Flask(__name__)
 app.secret_key = config['web']['secretKey']
 
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'
+app.permanent_session_lifetime = timedelta(hours=12)
+
 def unixtimeDatetime(unixtime):
-    return datetime.utcfromtimestamp(unixtime).strftime('%Y-%m-%d')
+    return datetime.fromtimestamp(unixtime, timezone.utc).strftime('%Y-%m-%d')
 
 app.jinja_env.filters['unixtimeDatetime'] = unixtimeDatetime
+
+def runPoller():
+    try:
+        result = subprocess.run(['python3', 'poller.py'], check=True, capture_output=True, text=True)
+        if config['debug']['enabled']:
+            print("**PONCHO POLLER DEBUG BEGIN**\n")
+            print(result.stdout)
+            print("**PONCHO POLLER DEBUG END**")
+    except subprocess.CalledProcessError as e:
+        print("Poncho Poller failed with error:", e.stderr)
+
+def pollerScheduler():
+    runPoller()
+    schedule.every(int(config['umbrella']['reportingLookback'])).minutes.do(runPoller)
+    
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 def debug(message):
     if config['debug']['enabled']:
@@ -85,7 +114,10 @@ def addGlobalBlockListHost(accessToken,umbrellaGlobalBlockListID,hostname):
             ]'''
         response = requests.post(url, headers=headers, data=payload)
         debug(f'Add {hostname} Block Response: {response}')
-        return True
+        if response.status_code == 200:
+            return True
+        else:
+            return None
     else:
         return None
 
@@ -109,7 +141,10 @@ def removeGlobalBlockListHost(accessToken,umbrellaGlobalBlockListID,hostname):
         payload = f'''[ {item.get('id')} ]'''
         response = requests.delete(url, headers=headers, data=payload)
         debug(f'Remove {hostname} Block Response: {response}')
-        return True
+        if response.status_code == 200:
+            return True
+        else:
+            return None
     else:
         return None
 
@@ -121,9 +156,16 @@ def getDbConection():
 def verifyPassword(config_password, input_password):
     return bcrypt.checkpw(input_password.encode('utf-8'), config_password.encode('utf-8'))
 
-# Routes
+# Check if inline poller is enabled in config.yaml and if so start poller scheduler
+if config['web']['pollerEnabled']:
+    schedulerThread = threading.Thread(target=pollerScheduler)
+    schedulerThread.daemon = True
+    schedulerThread.start()
+
 @app.route('/')
 def index():
+    if not os.path.isfile('data/poncho.db'):
+        abort(404, "Poncho database not found. If this is a new installation initialize database by running poller.py")
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     conn = getDbConection()
@@ -140,6 +182,12 @@ def login():
             return redirect(url_for('index'))
         else:
             flash('Invalid password', 'danger')
+
+    # Check to see if inline poller is enabled and gunicorn was started without --preload as it will
+    # cause multiple poller processes to run at the same time.
+    if "gunicorn" in sys.modules and "--preload" not in sys.argv and config['web']['pollerEnabled']:
+        gunicorn = "**************************** WARNING ****************************\nGunicorn was launched without --preload option and inline poller is enabled.\nThis will cause poller to execute for every worker. Add --preload or disable\ninline poller in config.yaml\n**************************** WARNING ****************************"
+        flash(gunicorn,'danger')
     return render_template('login.html')
 
 @app.route('/logout')
@@ -179,4 +227,5 @@ def updateumbrella(host_id):
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    app.run(debug=config['debug']['enabled'])
+
+    app.run(debug=config['debug']['enabled'],use_reloader=not config['web']['pollerEnabled'])

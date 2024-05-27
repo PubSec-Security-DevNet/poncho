@@ -24,7 +24,7 @@
                 {% if messages %}
                     {% for category, message in messages %}
                         <div class="col">
-						    <div class="alert alert-{{ category }} shadow" role="alert">{{ message }}</div>
+						    <div class="alert alert-{{ category }} shadow alert-multiline" role="alert">{{ message }}</div>
 					    </div>
                     {% endfor %}
                 {% endif %}

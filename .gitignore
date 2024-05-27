@@ -162,5 +162,9 @@ cython_debug/
 #.idea/
 
 # Poncho Items
-data/poncho.db
+docker/nginx/*.conf
+docker/nginx/*.crt
+docker/nginx/*.key
+data/*
+!data/.gitkeep
 config.yaml

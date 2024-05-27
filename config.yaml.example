@@ -1,6 +1,10 @@
 # Enter Umbrella API Key and Secret to access logging data and make modifications to lists. 
 # Make sure to use v2 API credentials and not Legacy API credentials.  See README.md for needed rights.
 #
+# apikey: API Key from your Umbrella instance
+#
+# apiKeySecret: API Key Secret from your Umbrella instance
+#
 # reportingLookback: number of minutes prior to poller run that poller sould capture logs from.
 #   This value should be set to the same as your cron job interval.  Note, Umbrella has a limit of
 #   5,000 returned results in the reporting API query so don't set interval or cron job too high for
@@ -8,13 +12,17 @@
 #
 umbrella:
   apiKey: 
-  apiKeySecret : 
-  reportingLookback: "-15minutes"
+  apiKeySecret: 
+  reportingLookback: "15"
 
-# Set database filename to a different path and file if with wish to change default location.
-# Use caution when changing if using Docker container runtime.
+# This section is for setting database settings where found uncategorized domains are placed when found in logs
 #
-# defaultPurgeDays: purge time for destinations that have not been acted upon in Poncho i.e. you didn't choose block them in Umbrella.  
+# filename: Set database filename to a different path and file if with wish to change default location.
+#   Do not change if using Docker container runtime.
+#
+# defaultPurgeDays: purge time for destinations that have not been acted upon in Poncho i.e. you didn't choose 
+#   block them in Umbrella. 
+#
 # blockedPurgeDays: purge time for destinations you have acted upon in Poncho i.e. you blocked them in Umbrella. 
 #
 database:
@@ -26,13 +34,16 @@ database:
 # a OpenAI API account and usage is charged per lookup.  See README.md for API setup.
 #
 # enabled: enable or disable AI support in Poncho
+#
 # openAIKey: API access key from your OpenAI account
+#
 # maxInputToken: Poncho is set to use the OpenAI gpt-3.5-turbo-0125 model which is relatively inexpensive to use.
 #   Websites are scraped for words that are run through OpenAI's API.  OpenAI charges based on "tokens" which is a conversion
 #   of the text into a tokenized format. The model used is fractions of a penny per 1K tokens.  Setting maxInputToken limits the
 #   size of text sent to OpenAI for analysis.  You can experiment with the setting, but, 250 has seen to provide good results
 #   in random tests. Just know changing this setting higher could result in more usage costs per lookup depending on website page size.  
-#   Output tokens (responses) are also charged by OpenAI and Poncho is capped to responses of no more then 5 tokens. 
+#   Output tokens (responses) are also charged by OpenAI and Poncho is capped to responses of no more then 5 tokens.
+# 
 # categories: The categories you are looking AI to determine if the website could contain content on. This text
 #   is used within a written sentence that is sent to OpenAI.  Examples of how to enter values:
 #   "anonymizer or vpn", "anonymizer, vpn, or cryptomining", "anonymizer, vpn, gambling, or cryptomining"
@@ -46,15 +57,22 @@ ai:
 # Web settings control access to Poncho's web intrface to be able to see records and take actions in Umbrella.
 # Currently only a single password is supported for accessing the web interface.
 #
-# secretKey: It is recomended to change this value to your own random set of letters and numbers.  It is used
+# secretKey: Set this value to your own random set of letters and numbers.  It is used
 #   to secure Python Flask sessions.
+#
 # password: This is a bcrypt password hashed password to access the Poncho web interface.  Use the passwdgen.py script
-#   to create this hash for your password and past it in below.
+#   to create this hash for your password and past it in below or go to https://bcrypt.online/ and get a bcrypt hash of
+#   your password.
 #   Command: python3 passwdgen.py <password>
+#
+# pollerEnabled: The poller script can either run within the web process, or, can be run outside on its own by using
+#   cron or another type of scheduler.  Setting to True runs poller from within web process.  For Docker deployments
+#   set value to True.
 #
 web:
   secretKey: 
   password: 
+  pollerEnabled: False
 
 # Enable or disable debug logging to console.
 debug:
