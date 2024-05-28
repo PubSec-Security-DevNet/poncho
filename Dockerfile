@@ -20,11 +20,8 @@ LABEL version="0.9.0"
 LABEL description="Poncho: Uncategorized Website Management Tool For Cisco Umbrella"
 LABEL maintainer="nciesins@cisco.com"
 
-
-# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
@@ -37,10 +34,8 @@ RUN apt-get update \
     && apt-get purge \
     && rm -rf /var/lib/apt/lists/* 
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the rest of the application code to the working directory
 COPY requirements.txt .
 COPY static ./static
 COPY templates ./templates
@@ -76,8 +71,6 @@ RUN pip install --no-cache-dir -r requirements.txt && \
     echo "if [ -f \"/etc/nginx/sites-enabled/poncho.conf\" ]; then nginx -g 'daemon off;' & fi" >> run.sh && \
     echo "gunicorn --preload --workers=4 --bind 0.0.0.0:8000 poncho:app" >> run.sh
     
-# Expose the Flask app port
 EXPOSE 8000 80 443
 
-# Run Gunicorn to serve the Flask app
 CMD ["./run.sh"]
