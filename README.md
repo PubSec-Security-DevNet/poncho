@@ -47,7 +47,7 @@ The use of OpenAI analysis is optional and requires an OpenAI API account, subje
 1. Clone the Poncho repository. `git clone https://github.com/PubSec-Security-DevNet/poncho.git`.
 2. (Initial Setup Only) Create and activate a virtual environment. `python3 -m venv venv ; source venv/bin/activate`
 3. Install dependencies using `pip install -r requirements.txt`.
-4. (Initial Setup Only) Copy config.yaml.example to config.yaml and edit. Add Umbrella and OpenAI API credentials and make other modifications as required. `cp config.yaml.exmple config.yaml`
+4. (Initial Setup Only) Copy config.yaml.example to config.yaml and edit. Add Umbrella and OpenAI API credentials and make other modifications as required. `cp config.yaml.example config.yaml`
 5. Run the web application using `venv/bin/gunicorn --preload --workers=4 --bind 0.0.0.0:8000 poncho:app`.
     - Note, this example will run the web application without SSL on port 8000.  See gunicorn documentation or proxy the app behind Nginx, Apache, or other web server to add SSL.
 6. Access the web interface at: `http://localhost:8000`.
@@ -58,7 +58,7 @@ The Docker container can be set up to just use Gunicorn on port 8000, or it can 
 
 1. Clone the Poncho repository: `git clone https://github.com/PubSec-Security-DevNet/poncho.git`.
 2. (Initial Setup Only) Create a Docker volume for poncho's database: `docker volume create ponchodb`
-3. (Initial Setup Only) Copy config.yaml.example to config.yaml and edit. Add Umbrella and OpenAI API credentials and make other modifications as required. `cp config.yaml.exmple config.yaml`
+3. (Initial Setup Only) Copy config.yaml.example to config.yaml and edit. Add Umbrella and OpenAI API credentials and make other modifications as required. `cp config.yaml.example config.yaml`
 4. (Initial Setup Only & Optional) Configure Nginx as a web proxy, see above.
 5. Build the Docker container: `docker build -t poncho-image . --no-cache`
 6. Run the container:
