@@ -22,7 +22,7 @@ The use of OpenAI analysis is optional and requires an OpenAI API account, subje
 
 **Cisco Products:**
 
-- Cisco Umbrealla
+- Cisco Umbrella
 
 ## Technologies Used
 
@@ -37,7 +37,7 @@ The use of OpenAI analysis is optional and requires an OpenAI API account, subje
 
 1. Clone the Poncho repository. `git clone https://github.com/PubSec-Security-DevNet/poncho.git`.
 2. Install dependencies using `pip install -r requirements.txt`.
-3. (Initital Setup Only) Copy config.yaml.example to config.yaml and edit. Add Umbrella and OpenAI API credentials and make other modifications as required. `cp config.yaml.exmple config.yaml`
+3. (Initial Setup Only) Copy config.yaml.example to config.yaml and edit. Add Umbrella and OpenAI API credentials and make other modifications as required. `cp config.yaml.exmple config.yaml`
 4. Run the web application using `gunicorn --preload --workers=4 --bind 0.0.0.0:8000 poncho:app`.
     - Note, this example will run the web application without SSL on port 8000.  See gunicorn documentation or proxy the app behind Nginx, Apache, or other web server to add SSL.
 5. Access the web interface at: `http://localhost:8000`.
@@ -45,9 +45,9 @@ The use of OpenAI analysis is optional and requires an OpenAI API account, subje
 ### Standalone (Python Virtual Enviroment)
 
 1. Clone the Poncho repository. `git clone https://github.com/PubSec-Security-DevNet/poncho.git`.
-2. (Initital Setup Only) Create and activate a virtual environment. `python3 -m venv venv ; source venv/bin/activate`
+2. (Initial Setup Only) Create and activate a virtual environment. `python3 -m venv venv ; source venv/bin/activate`
 3. Install dependencies using `pip install -r requirements.txt`.
-4. (Initital Setup Only) Copy config.yaml.example to config.yaml and edit. Add Umbrella and OpenAI API credentials and make other modifications as required. `cp config.yaml.exmple config.yaml`
+4. (Initial Setup Only) Copy config.yaml.example to config.yaml and edit. Add Umbrella and OpenAI API credentials and make other modifications as required. `cp config.yaml.exmple config.yaml`
 5. Run the web application using `venv/bin/gunicorn --preload --workers=4 --bind 0.0.0.0:8000 poncho:app`.
     - Note, this example will run the web application without SSL on port 8000.  See gunicorn documentation or proxy the app behind Nginx, Apache, or other web server to add SSL.
 6. Access the web interface at: `http://localhost:8000`.
@@ -57,8 +57,8 @@ The use of OpenAI analysis is optional and requires an OpenAI API account, subje
 The Docker container can be set up to just use Gunicorn on port 8000, or it can use Nginx as a frontend to Gunicorn and provide SSL support. To set up Nginx with SSL, copy `poncho.conf.example` to `poncho.conf` in the `docker/nginx` folder and modify it to your environment. Add your certificate to the `docker/nginx` directory and name it `cert-bundle.crt`. This file should include any intermediate certs if needed. Then, add your certificate's private key file to the `docker/nginx` directory and name it `cert.key`. There are two options for step 6 below based on if you're using just Gunicorn or Nginx.
 
 1. Clone the Poncho repository: `git clone https://github.com/PubSec-Security-DevNet/poncho.git`.
-2. (Initital Setup Only) Create a Docker volume for poncho's database: `docker volume create ponchodb`
-3. (Initital Setup Only) Copy config.yaml.example to config.yaml and edit. Add Umbrella and OpenAI API credentials and make other modifications as required. `cp config.yaml.exmple config.yaml`
+2. (Initial Setup Only) Create a Docker volume for poncho's database: `docker volume create ponchodb`
+3. (Initial Setup Only) Copy config.yaml.example to config.yaml and edit. Add Umbrella and OpenAI API credentials and make other modifications as required. `cp config.yaml.exmple config.yaml`
 4. (Initial Setup Only & Optional) Configure Nginx as a web proxy, see above.
 5. Build the Docker container: `docker build -t poncho-image . --no-cache`
 6. Run the container:
@@ -78,7 +78,7 @@ The Poller is responsible for querying Umbrella logs for uncategorized domains a
 
 To run the Poller from outside the web process, set up a cron or scheduled task on your operating system to call the Poller process at the same interval you set for `reportingLookback` in the `config.yaml` file.
 
-Cron standaone example:
+Cron standalone example:
 
 1. Edit /etc/crontab `vi /etc/crontab`
 2. Add the crontab entry and save `*/15 * * * * /path/to/poncho/venv/bin/python3 /path/to/poncho/poller.py`.  Change /path/to/poncho to where you installed poncho.
